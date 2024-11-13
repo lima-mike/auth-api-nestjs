@@ -1,33 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
 import { RegisterDto } from '../auth/dto/register.dto';
+import { PrismaService } from 'prisma/prisma.service';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
-  async findById(id: number): Promise<User | undefined> {
-    return this.userRepository.findOne({ where: { id } });
+  async findById(id: number): Promise<User | null> {
+    return this.prisma.user.findUnique({ where: { id } });
   }
 
-  async findByEmail(email: string): Promise<User | undefined> {
-    return this.userRepository.findOne({ where: { email } });
+  async findByEmail(email: string): Promise<User | null> {
+    return this.prisma.user.findUnique({ where: { email } });
   }
 
   async createUser(
     registerDto: RegisterDto,
     hashedPassword: string,
   ): Promise<User> {
-    const newUser = this.userRepository.create({
-      ...registerDto,
-      password: hashedPassword,
+    return this.prisma.user.create({
+      data: { ...registerDto, password: hashedPassword },
     });
-
-    return this.userRepository.save(newUser);
   }
 }
