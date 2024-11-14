@@ -23,4 +23,11 @@ export class UsersService {
       data: { ...registerDto, password: hashedPassword },
     });
   }
+
+  async updatePassword(userId: number, hashedPassword: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+  }
 }

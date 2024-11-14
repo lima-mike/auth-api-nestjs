@@ -1,8 +1,11 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { User } from 'src/common/decorators/user.decorator';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -26,5 +29,20 @@ export class AuthController {
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
+  }
+
+  @ApiOperation({ summary: 'Change user password' })
+  @ApiResponse({ status: 200, description: 'Password changed successfully' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized. Invalid credentials.',
+  })
+  @UseGuards(JwtAuthGuard)
+  @Post('change-password')
+  async changePassword(
+    @User() user,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    return this.authService.changePassword(user.userId, changePasswordDto);
   }
 }

@@ -4,6 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { UsersService } from '../users/users.service';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -30,7 +31,9 @@ export class AuthService {
   async register(registerDto: RegisterDto) {
     const { email, password } = registerDto;
     const user = await this.usersService.findByEmail(email);
-    if (user) throw new UnauthorizedException('User already exists');
+    if (user) {
+      throw new UnauthorizedException('User already exists');
+    }
 
     const hashedPassword = await this.hashPassword(password);
     const newUser = await this.usersService.createUser(
@@ -57,5 +60,27 @@ export class AuthService {
     const token = await this.generateJwt(user.id);
 
     return { accessToken: token };
+  }
+
+  async changePassword(userId: number, changePasswordDto: ChangePasswordDto) {
+    const { currentPassword, newPassword } = changePasswordDto;
+
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const isCurrentPasswordValid = await this.comparePasswords(
+      currentPassword,
+      user.password,
+    );
+    if (!isCurrentPasswordValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    const hashedNewPassword = await this.hashPassword(newPassword);
+    await this.usersService.updatePassword(userId, hashedNewPassword);
+
+    return { message: 'Password changed successfully' };
   }
 }
