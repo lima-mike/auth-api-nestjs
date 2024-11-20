@@ -2,7 +2,12 @@ import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { User } from 'src/common/decorators/user.decorator';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
@@ -37,6 +42,7 @@ export class AuthController {
     status: 401,
     description: 'Unauthorized. Invalid credentials.',
   })
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Post('change-password')
   async changePassword(
@@ -44,5 +50,23 @@ export class AuthController {
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
     return this.authService.changePassword(user.userId, changePasswordDto);
+  }
+
+  @ApiOperation({ summary: 'Deactivate user account' })
+  @ApiResponse({ status: 200, description: 'Account deactivated successfully' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Post('deactivate')
+  async deactivateAccount(@User() user) {
+    return this.authService.deactivateAccount(user.userId);
+  }
+
+  @ApiOperation({ summary: 'Reactivate user account' })
+  @ApiResponse({ status: 200, description: 'Account reactivated successfully' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Post('activate')
+  async reactivateAccount(@User() user) {
+    return this.authService.reactivateAccount(user.userId);
   }
 }

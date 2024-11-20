@@ -13,7 +13,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async hashPassword(password: string): Promise<string> {
+  async hashPassword(password: string) {
     return bcrypt.hash(password, 10);
   }
 
@@ -24,7 +24,7 @@ export class AuthService {
     return bcrypt.compare(password, hashedPassword);
   }
 
-  async generateJwt(userId: number): Promise<string> {
+  async generateJwt(userId: number) {
     return this.jwtService.sign({ userId });
   }
 
@@ -50,6 +50,10 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
+    if (!user.isActive) {
+      throw new UnauthorizedException('Account is deactivated');
+    }
+
     const isValidPassword = await this.comparePasswords(
       password,
       user.password,
@@ -82,5 +86,25 @@ export class AuthService {
     await this.usersService.updatePassword(userId, hashedNewPassword);
 
     return { message: 'Password changed successfully' };
+  }
+
+  async deactivateAccount(userId: number) {
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    await this.usersService.deactivateAccount(userId);
+
+    return { message: 'Account deactivated successfully' };
+  }
+
+  async reactivateAccount(userId: number) {
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    await this.usersService.reactivateAccount(userId);
+
+    return { message: 'Account reactivated successfully' };
   }
 }

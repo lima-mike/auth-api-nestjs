@@ -11,6 +11,10 @@ export class UsersService {
     return this.prisma.user.findUnique({ where: { id } });
   }
 
+  async findByIdIfActive(id: number): Promise<User | null> {
+    return this.prisma.user.findUnique({ where: { id, isActive: true } });
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     return this.prisma.user.findUnique({ where: { email } });
   }
@@ -28,6 +32,20 @@ export class UsersService {
     return this.prisma.user.update({
       where: { id: userId },
       data: { password: hashedPassword },
+    });
+  }
+
+  async deactivateAccount(userId: number) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { isActive: false },
+    });
+  }
+
+  async reactivateAccount(userId: number) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { isActive: true },
     });
   }
 }
